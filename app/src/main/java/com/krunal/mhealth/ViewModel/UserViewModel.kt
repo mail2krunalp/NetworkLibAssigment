@@ -13,7 +13,7 @@ class UserViewModel : ViewModel() {
             = liveData(Dispatchers.IO){
         emit(Resource.loading(data = null))
         try {
-            emit(Resource.success(data = NetworkApiLogic().getUserData(context)))
+            emit(Resource.success(data = NetworkApiLogic().getNetworkResponse(context,"https://demo/url1","GET",true)))
         } catch (exception: Exception) {
             emit(Resource.error(data = null, message = exception.message ?: "Error Occurred!"))
         }

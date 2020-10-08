@@ -1,7 +1,6 @@
 package com.assignment.sparklive.network
 
 import android.content.Context
-import android.preference.PreferenceManager
 import android.util.Log
 import kotlinx.coroutines.delay
 import java.io.InputStream
@@ -9,26 +8,38 @@ import java.io.InputStream
 
 class NetworkApiLogic {
 
-    suspend fun getUserData(context: Context) : String? {
+    //Required parameters:
+    //url- Network url
+    //method: get/post/put/delete
+    //cache: Want to fetch data from cache or from network database
+    //Description: Here data will stored in preference and url passed will be the Key.
+    //Stored data will be mapped based on the url passed
+    suspend fun getNetworkResponse(context: Context, url : String, method : String, cache : Boolean) : String? {
         delay(1000)
-
-        var dataFromPref = getPreference(context,"response")
-
-        if(dataFromPref.isNullOrEmpty()){
-             // get the data from api
-            var response = readJSONFromAsset(context)
-            Log.i("NetworkApiLogic" ,"Getting the data from API")
-            //set the data to pref
-            setPreference(context,"response",response)
-            return getPreference(context,"response")
+        if(cache){
+            val dataFromPref = getPreference(context,url)
+            if(dataFromPref.isNullOrEmpty()){ // no data in preference
+                Log.i("NetworkApiLogic" ,"Getting the data from API")
+                var response = readJSONFromAsset(context)
+                //set the data to pref
+                setPreference(context,url,response)
+                return response
+            }else{
+                Log.i("NetworkApiLogic" ,"Getting the data from Shared Preference")
+                return  dataFromPref
+            }
         }else{
-            Log.i("NetworkApiLogic" ,"Getting the data from Shared Preference")
-            return dataFromPref
+            Log.i("NetworkApiLogic" ,"Getting the data from API")
+            var response = readJSONFromAsset(context)
+            //set the data to pref
+            setPreference(context,url,response)
+            return response
         }
 
     }
 
-    fun readJSONFromAsset(context: Context): String? {
+    //Here we will get the network data as raw string
+    private fun readJSONFromAsset(context: Context): String? {
         var json: String
         try {
             val inputStream: InputStream = context.assets.open("items.json")
@@ -40,7 +51,7 @@ class NetworkApiLogic {
         return json
     }
 
-    fun setPreference(context: Context, key: String?, value: String?): Boolean {
+    private fun setPreference(context: Context, key: String?, value: String?): Boolean {
         val settings =
             context.getSharedPreferences("Assignment", Context.MODE_PRIVATE)
         val editor = settings.edit()
@@ -48,7 +59,7 @@ class NetworkApiLogic {
         return editor.commit()
     }
 
-    fun getPreference(context: Context, key: String?): String? {
+    private fun getPreference(context: Context, key: String?): String? {
         val settings =
             context.getSharedPreferences("Assignment", Context.MODE_PRIVATE)
         return settings.getString(key, null)
